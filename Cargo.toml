@@ -1,5 +1,5 @@
 [package]
-name = "str"
+name = "structopt"
 version = "0.1.0"
 authors = ["icew4ll <icew4ll@tuta.io>"]
 
@@ -11,3 +11,4 @@ serde_derive = "1.0.75"
 serde = "1.0.75"
 lapp = "0.3.1"
 duct = "0.11.0"
+csv = "1.0.1"

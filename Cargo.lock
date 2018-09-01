@@ -54,6 +54,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "csv"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "csv-core 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.75 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "csv-core"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "memchr 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "docopt"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -202,10 +219,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "str"
+name = "strsim"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "structopt"
 version = "0.1.0"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "csv 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "docopt 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "duct 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lapp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -213,11 +236,6 @@ dependencies = [
  "serde_derive 1.0.75 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "strsim"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "structopt"
@@ -336,6 +354,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cc 1.0.22 (registry+https://github.com/rust-lang/crates.io-index)" = "4a6007c146fdd28d4512a794b07ffe9d8e89e6bf86e2e0c4ddff2e1fb54a0007"
 "checksum cfg-if 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "0c4e7bb64a8ebb0d856483e1e682ea3422f883c5f5615a90d51a2c82fe87fdd3"
 "checksum clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b957d88f4b6a63b9d70d5f454ac8011819c6efa7727858f458ab71c756ce2d3e"
+"checksum csv 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0bbb6d75aae072248e381715437855a69595e5a97d3abbf748fe7a95e65d77fa"
+"checksum csv-core 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "4dd8e6d86f7ba48b4276ef1317edc8cc36167546d8972feb4a2b5fec0b374105"
 "checksum docopt 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d60c92df70dfaaabecc14b409fd79f55ba0f247780529db1d73bfa601e1d3ac0"
 "checksum duct 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9df59e20878eb2b006af6b20ee44d3fb5134a1978ff14cfcc99c08c898d424c6"
 "checksum lapp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "44758669f6f88b6dddac3f833f234d5128530108b5738932a166eb69660faea8"

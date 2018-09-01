@@ -33,6 +33,7 @@ fn run(opt: Opt) -> io::Result<()> {
 fn cat<R: Read, W: Write>(reader: R, mut writer: W) -> io::Result<()> {
     for b in reader.bytes() {
         writer.write(&[b?])?;
+        println!("{}", b);
     }
     Ok(())
 }
