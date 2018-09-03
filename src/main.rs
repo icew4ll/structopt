@@ -3,6 +3,8 @@
 extern crate structopt;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate lazy_static;
 extern crate csv;
 extern crate duct;
 use duct::cmd;
@@ -51,6 +53,7 @@ fn main() {
     // println!("{:?}", connections);
     //}}}
     let opt = Opt::from_args();
+    // println!("{:?}", opt);
     // println!("{:?}", opt.file);
     // argument index 1 parsing {{{
     if let Some(arg1) = opt.file {
@@ -72,7 +75,12 @@ fn main() {
     // }}}
     // match subcommands {{{
     match opt.cmd {
-        Some(audit) => println!("{:?}", audit),
+        Some(Command::Audit { ips }) => {
+            if let Err(err) = audit(ips) {
+                println!("{}", err);
+                process::exit(1);
+            }
+        }
         _ => (),
     }
     // }}}
@@ -122,13 +130,13 @@ fn ssh(ip: String, user: String, pass: String, route: &str) -> Result<(), Box<Er
                 let args = &["-c", &cmds.join(";")];
                 cmd("expect", args).run().unwrap();
             }
-            "UP"|"UI" => {
+            "UP" | "UI" => {
                 let cmds = [&setup[..], &blan[..], &sudo[..], &interact[..]].concat();
                 println!("{}", &cmds.join(";"));
                 let args = &["-c", &cmds.join(";")];
                 cmd("expect", args).run().unwrap();
             }
-            "UA"|"US"|"UL" => {
+            "UA" | "US" | "UL" => {
                 println!("{}", &brdesktop);
                 let args = &["-c", &brdesktop];
                 cmd("bash", args).run().unwrap();
@@ -142,19 +150,64 @@ fn ssh(ip: String, user: String, pass: String, route: &str) -> Result<(), Box<Er
                 let args = &["-c", &cmds.join(";")];
                 cmd("expect", args).run().unwrap();
             }
-            "UP"|"UI" => {
+            "UP" | "UI" => {
                 let cmds = [&setup[..], &lan[..], &sudo[..], &interact[..]].concat();
                 println!("{}", &cmds.join(";"));
                 let args = &["-c", &cmds.join(";")];
                 cmd("expect", args).run().unwrap();
             }
-            "UA"|"US"|"UL" => {
+            "UA" | "US" | "UL" => {
                 println!("{}", &rdesktop);
                 let args = &["-c", &rdesktop];
                 cmd("bash", args).run().unwrap();
             }
             _ => (),
         },
+    }
+    Ok(())
+}
+// }}}
+// audit {{{
+fn audit(ips: Vec<String>) -> Result<(), Box<Error>> {
+    println!("IPS: {:?}", ips);
+    for ip in ips {
+        let test = vec_of_strings![
+            "set prompt {[#|%|>|$] $}\n",
+            format!("spawn ssh $env({})@{}", "UP", ip),
+            "expect \"assword\"",
+            format!("send \"$env({})\n\"", "PG"),
+            "expect $prompt",
+            "send \"uname -n\n\"",
+            "expect $prompt",
+            "send \"cat /etc/*release | grep -m 1 -E 'Red Hat|Cent|Debian|PRETTY_NAME'\n\"",
+            "expect $prompt",
+            "send \"php -v\n\"",
+            "expect $prompt",
+            "send \"openssl version\n\"",
+            "expect $prompt",
+            // new
+            "send \"grep -m 1 -E '(QEMU|Intel\\(R\\))' /proc/cpuinfo | awk '{ print substr(\\$0, index(\\$0,\\$4)) }'\n\"",
+            "expect $prompt",
+            "send \"httpd -v | awk '/Apache/ {print \\$3}'\n\"",
+            "expect $prompt",
+            "send \"perl -v | awk '/This/ {print \\$4}'\n\"",
+            "expect $prompt",
+            "send \"mysql -V\n\"",
+            "expect $prompt",
+            "send \"iscsiadm -m session -P 3 | tail -1 | awk '{ print substr(\\$0, index(\\$0,\\$1)) }'\n\"",
+            "expect $prompt",
+            // exit
+            "send \"exit\n\"",
+            "expect eof",
+            "exit"
+        ];
+        // println!("{}", test.join(";"));
+        let args = &["-c", &test.join(";")];
+        let stdout = cmd("expect", args).read().unwrap();
+        // println!("{:?}", stdout);
+        let vec: Vec<&str> = stdout.split("\r\n").collect();
+        // println!("{:?}", vec);
+        println!("{},{},{},{},{},{},{},{},{}", vec[4], vec[6], vec[8], vec[10], vec[12], vec[14], vec[16], vec[18], vec[20]);
     }
     Ok(())
 }
