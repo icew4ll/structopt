@@ -3,11 +3,13 @@
 extern crate structopt;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate lazy_static;
+// #[macro_use]
+// extern crate lazy_static;
 extern crate csv;
 extern crate duct;
+extern crate regex;
 use duct::cmd;
+// use regex::RegexSet;
 use std::error::Error;
 use std::fs::File;
 use std::process;
@@ -173,28 +175,29 @@ fn audit(ips: Vec<String>) -> Result<(), Box<Error>> {
     for ip in ips {
         let test = vec_of_strings![
             "set prompt {[#|%|>|$] $}\n",
-            format!("spawn ssh $env({})@{}", "UP", ip),
+            format!("spawn ssh $env({})@{}", "UI", ip),
             "expect \"assword\"",
             format!("send \"$env({})\n\"", "PG"),
             "expect $prompt",
             "send \"uname -n\n\"",
             "expect $prompt",
-            "send \"cat /etc/*release | grep -m 1 -E 'Red Hat|Cent|Debian|PRETTY_NAME'\n\"",
+            // "send \"python -c 'import platform;print(platform.platform())'\n\"",
+            "send \"cat /etc/*release | grep -m 1 -E '(Red Hat|Cent|Debian|PRETTY_NAME|Fedora)' | sed -e 's/PRETTY_NAME=//'\n\"",
             "expect $prompt",
             "send \"php -v\n\"",
             "expect $prompt",
             "send \"openssl version\n\"",
             "expect $prompt",
             // new
-            "send \"grep -m 1 -E '(QEMU|Intel\\(R\\))' /proc/cpuinfo | awk '{ print substr(\\$0, index(\\$0,\\$4)) }'\n\"",
+            "send \"grep -m 1 -E 'model name' /proc/cpuinfo | awk '{ print substr(\\$0, index(\\$0,\\$4)) }'\n\"",
             "expect $prompt",
             "send \"httpd -v | awk '/Apache/ {print \\$3}'\n\"",
             "expect $prompt",
-            "send \"perl -v | awk '/This/ {print \\$4}'\n\"",
+            "send \"perl -v | head -2\n\"",
             "expect $prompt",
             "send \"mysql -V\n\"",
             "expect $prompt",
-            "send \"iscsiadm -m session -P 3 | tail -1 | awk '{ print substr(\\$0, index(\\$0,\\$1)) }'\n\"",
+            "send \"iscsiadm -m session -P 3 | egrep '(iscsiadm|Attached scsi)' | sed -e 's/\\[\\\\t\\]*//'\n\"",
             "expect $prompt",
             // exit
             "send \"exit\n\"",
@@ -205,9 +208,63 @@ fn audit(ips: Vec<String>) -> Result<(), Box<Error>> {
         let args = &["-c", &test.join(";")];
         let stdout = cmd("expect", args).read().unwrap();
         // println!("{:?}", stdout);
+        // split
         let vec: Vec<&str> = stdout.split("\r\n").collect();
-        // println!("{:?}", vec);
-        println!("{},{},{},{},{},{},{},{},{}", vec[4], vec[6], vec[8], vec[10], vec[12], vec[14], vec[16], vec[18], vec[20]);
+        // strip out command lines
+        let strip = vec
+            .into_iter()
+            .filter(|x| !x.contains("$"))
+            .filter(|x| !x.contains("#"))
+            .filter(|x| !x.contains("Zend"))
+            .filter(|x| !x.contains("Copyright"))
+            .filter(|x| !x.contains("perl -v"))
+            .filter(|&x| x != "")
+            .filter(|&x| x != "exit")
+            .filter(|&x| x != "mysql -V")
+            .filter(|&x| x != "openssl version")
+            .filter(|&x| x != "php -v")
+            .collect::<Vec<_>>();
+        // print strip
+        let select = strip
+            .iter()
+            .position(|&x| x.contains("Last login")).unwrap();
+        // strip.iter().for_each(|x| println!("{:?}", x));
+        let finish = &strip[select+1..strip.len()-2].join("%");
+        println!("{}", finish);
+        // contains
+        // let mysql = &strip.iter().filter(|x| x.contains("mysql")).collect::<Vec<_>>();
+        // let iscsiadm = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("iscsiadm"))
+        //     .collect::<Vec<_>>();
+        // let intel = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("Intel"))
+        //     .collect::<Vec<_>>();
+        // let openssl = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("OpenSSL"))
+        //     .collect::<Vec<_>>();
+        // let php = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("php"))
+        //     .collect::<Vec<_>>();
+        // let perl = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("perl"))
+        //     .collect::<Vec<_>>();
+        // let linux = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("Linux-"))
+        //     .collect::<Vec<_>>();
+        // let httpd = &strip
+        //     .iter()
+        //     .filter(|x| x.contains("httpd"))
+        //     .collect::<Vec<_>>();
+        // println!(
+        //     "{:?},{:?},{:?},{:?},{:?},{:?},{:?},{:?}",
+        //     mysql, iscsiadm, intel, openssl, php, perl, linux, httpd
+        // );
     }
     Ok(())
 }
